@@ -17,7 +17,12 @@ namespace Library
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            Console.WriteLine($"Current Environment: {builder.Environment.EnvironmentName}");
+            builder.Configuration
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+            .AddEnvironmentVariables();
             // Add services to the container.
 
             //builder.Services.AddControllers();
@@ -38,7 +43,7 @@ namespace Library
             builder.Services
                 .AddDbContext<LibraryContext>(option =>
                 {
-                    option.UseSqlServer(builder.Configuration.GetConnectionString("Library"));
+                    option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
                 });
 
 
@@ -106,12 +111,13 @@ namespace Library
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-
+            //if (app.Environment.IsDevelopment())
+            //{
+            //    app.UseSwagger();
+            //    app.UseSwaggerUI();
+            //}
+            app.UseSwagger();
+            app.UseSwaggerUI();
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
@@ -119,8 +125,13 @@ namespace Library
 
 
             app.MapControllers();
-
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                var context = services.GetRequiredService<LibraryContext>(); 
+                context.Database.Migrate();
+            }
             app.Run();
         }
     }
-}
+}   
