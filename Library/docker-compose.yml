@@ -11,16 +11,19 @@ services:
         volumes:
             - mssql_data:/var/opt/mssql 
     library-api:
-        # build: .
-        image: mohamedhelmyy/library_api:v3
+        #build: .
+        image: mohamedhelmyy/library_api:v7
         container_name: library-api-container
         ports:
             - "8080:8080"
         depends_on:
             - sql-server
         environment:
-            - ASPNETCORE_ENVIRONMENT=Development
-            - ConnectionStrings__DefaultConnection=Server=sql-server;Database=${DB_NAME};User Id=${DB_USER};Password=moHamed@2002;TrustServerCertificate=True; 
+            - ASPNETCORE_ENVIRONMENT=Production
+            - ConnectionStrings__DefaultConnection=Server=sql-server;Database=${DB_NAME};User Id=${DB_USER};Password=${SQL_PASSWORD};TrustServerCertificate=True; 
+            - JWT__SecritKey=${JWT_KEY}
+            - JWT__IssuerIP=${JWT_ISSUER}
+            - JWT__AudienceIP=${JWT_AUDIENCE}
 volumes:
     mssql_data:
         external: true
